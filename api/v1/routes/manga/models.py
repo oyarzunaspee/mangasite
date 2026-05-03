@@ -179,7 +179,6 @@ class IndividualPages(BaseModel):
 
     class Settings:
         projection = {
-            "id": 0,
             "number": 1, 
             "double": 1,
             "content": 1,
