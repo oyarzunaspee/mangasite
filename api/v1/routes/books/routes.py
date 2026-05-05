@@ -1,12 +1,17 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status, Cookie
 from .models import Book
+from api.v1.routes.auth.decorators import auth_user
+from fastapi_problem.error import ServerProblem
 
 
 router = APIRouter(prefix="/books", tags=["books"])
 
 # list of books
 @router.get("")
-async def get_books():
+@auth_user
+async def get_books(
+    token: str | None = Cookie(default=None)
+):
     try:
 
         books = await Book.aggregate([{
@@ -19,15 +24,19 @@ async def get_books():
 
         return {"status": status.HTTP_200_OK, "books": books}
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {e}")
+        raise ServerProblem(detail=e)
 
 # book detail
 @router.get("/{book_id}")
-async def get_book(book_id: str):
+@auth_user
+async def get_book(
+    book_id: str,
+    token: str | None = Cookie(default=None)
+):
     try:
 
         book = await Book.get(book_id)
 
         return {"status": status.HTTP_200_OK, "book": book}
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {e}")
+        raise ServerProblem(detail=e)
