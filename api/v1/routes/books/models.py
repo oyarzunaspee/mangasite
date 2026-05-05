@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from beanie import Document
 from typing import List
 from enum import Enum
@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-URL = os.getenv(os.getenv('STORE_URL'))
+URL = os.getenv('STORE_URL')
 
 
 class BookType(str, Enum):
@@ -17,6 +17,12 @@ class BookType(str, Enum):
 class BookPage(BaseModel):
     number: int
     link: str
+
+    @computed_field
+    @property
+    def full_link(self) -> str:
+        return f"{URL}{self.link}"
+
 
 class Book(Document):
     type: BookType
