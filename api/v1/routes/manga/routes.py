@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Cookie
-from .models import Page, IndividualPages
+from .models import Page, IndividualPages, Chapter
 from beanie.operators import Or
 from api.v1.routes.auth.decorators import auth_user
 from fastapi_problem.error import ServerProblem
@@ -37,7 +37,9 @@ async def get_pages(
             fetch_links=True
         ).sort(+Page.number).project(IndividualPages).to_list()
 
-        return {"status": status.HTTP_200_OK, "pages": pages}
+        next_limit = await Chapter.find().sort(-Chapter.number).first_or_none()
+
+        return {"status": status.HTTP_200_OK, "pages": pages, "next_limit": next_limit.number}
     except Exception as e:
         raise ServerProblem(detail=e)
 
