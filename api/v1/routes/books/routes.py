@@ -14,13 +14,7 @@ async def get_books(
 ):
     try:
 
-        books = await Book.aggregate([{
-            "$project": {
-                "_id": {"$toString": "$_id"},
-                "short": 1,
-                "type": 1
-            }
-        }]).to_list()
+        books = await Book.get_books()
 
         return {"status": status.HTTP_200_OK, "books": books}
     except Exception as e:

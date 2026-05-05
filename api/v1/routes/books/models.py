@@ -36,3 +36,20 @@ class Book(Document):
 
     class Settings:
         name = "books"
+
+    @classmethod
+    async def get_books(cls):
+        books = await cls.aggregate([{
+            "$project": {
+                "_id": {"$toString": "$_id"},
+                "short": 1,
+                "type": 1,
+                "cover": {
+                    "$concat": [
+                        URL,
+                        { "$arrayElemAt": ["$pages.link", 0] }
+                    ]
+                }
+            }
+        }]).to_list()
+        return books
