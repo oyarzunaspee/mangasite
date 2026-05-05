@@ -48,8 +48,15 @@ class Page(Document):
         name = "pages"
 
     @classmethod
-    async def query_volumes(cls, bunkoban: bool = False) -> List["Chapter"]:
+    async def query_volumes(cls, bunkoban: bool = False, saga: str = None) -> List["Chapter"]:
 
+        match = {
+            "volume.bunkoban": bunkoban
+        }
+
+        if saga:
+            match["volume.saga"] = saga
+        
         pipeline = [
             {
                 "$lookup": {
@@ -61,9 +68,7 @@ class Page(Document):
             },
             {"$unwind": "$volume"},
             {
-                "$match": {
-                    "volume.bunkoban": bunkoban
-                }
+                "$match": match
             },
             {
                 "$lookup": {

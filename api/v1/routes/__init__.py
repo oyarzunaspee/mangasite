@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from .auth.routes import router as auth_router
 from .manga.routes import router as manga_router
 from .books.routes import router as book_router
-from .filter.filter import router as filter_router
+from .filter.routes import router as filter_router
 
 router = APIRouter(prefix="/v1")
 router.include_router(auth_router)

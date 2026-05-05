@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Cookie
+from fastapi import APIRouter, status, Cookie
 from .models import Page, IndividualPages
 from beanie.operators import Or
 from api.v1.routes.auth.decorators import auth_user
