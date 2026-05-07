@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Cookie
 from api.v1.routes.auth.decorators import auth_user
-from api.v1.routes.manga.models import Page, Volume, Chapter, Character
+from api.v1.routes.manga.models import Page, Volume, Chapter
+from .models import Character
 from fastapi_problem.error import ServerProblem, BadRequestProblem
 from beanie.operators import Or, In
 
