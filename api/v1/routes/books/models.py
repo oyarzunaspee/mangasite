@@ -43,6 +43,7 @@ class Book(Document):
             "$project": {
                 "_id": {"$toString": "$_id"},
                 "short": 1,
+                "title": 1,
                 "type": 1,
                 "cover": {
                     "$concat": [
