@@ -13,9 +13,9 @@ async def filter_populate(
     token: str | None = Cookie(default=None)
     ):
     try:
-        sagas = await Volume.distinct("saga")
-        arcs = await Chapter.distinct("arc")
-        duels = await Chapter.distinct("duel")
+        sagas = await Volume.distinct( "saga" , { "saga" : { "$ne" : None } } )
+        arcs = await Chapter.distinct("arc", { "arc" : { "$ne" : None } })
+        duels = await Chapter.distinct("duel", { "duel" : { "$ne" : None } })
         chars = await Chapter.distinct("characters")
 
         return {
