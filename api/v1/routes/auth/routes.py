@@ -39,6 +39,7 @@ async def callback(request: Request):
         token = await oauth.twitter.authorize_access_token(request)
 
         user = await oauth.twitter.get("https://api.twitter.com/2/users/me", token=token)
+
         user_data = user.json()["data"]
 
         user_allowed = await AllowedUser.get_user(user_data["username"])
@@ -48,7 +49,7 @@ async def callback(request: Request):
         )
 
         if user_allowed:
-            new_token = await AllowedUser.set_token(user_data["username"], request.headers["user-agent"])
+            new_token = await AllowedUser.set_token(user_data["username"])
 
             response.set_cookie(
             key = "token",
@@ -56,8 +57,8 @@ async def callback(request: Request):
             httponly=True,
             secure=True,
             samesite="none"
-        )
-        return response
+            )
+            return response
     except Exception as e:
         raise ServerProblem(detail=e)
 

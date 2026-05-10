@@ -1,9 +1,8 @@
 from beanie import Document
 from pydantic import BaseModel
 from typing import List
-from joserfc import jwt
-from joserfc.jwk import OctKey
-from datetime import timedelta, UTC, datetime
+import jwt
+from datetime import timezone, datetime, timedelta
 import os
 from dotenv import load_dotenv
 from beanie.odm.operators.update.array import AddToSet
@@ -28,37 +27,26 @@ class AllowedUser(Document):
         return await AllowedUser.find(AllowedUser.username == username, AllowedUser.active == True).first_or_none()
     
     @classmethod
-    async def set_token(cls, username: str, user_agent: str):
+    async def set_token(cls, username: str):
         token = cls.create_access_token(username)
-        user = await cls.get_user(username)
-        if user:
-            new_token = Token(
-                user_agent=user_agent,
-                encode=token
-            )
-            await user.update(AddToSet({cls.tokens: new_token}))
         return token
 
     @classmethod
-    def create_access_token(cls, username: str):       
-        now = datetime.datetime.now(datetime.UTC)
-        claims = {
-            "sub": username,
-            "iat": now,
-            "exp": now + timedelta(int(os.getenv("ACCESS_TOKEN_EXPIRE"))),
-        }
-        header = {"alg": os.getenv("JWT_SECRET")}
-        key = os.getenv("JWT_SECRET")
-        encoded_jwt = jwt.encode(header, claims, key)
-
+    def create_access_token(cls, username: str):
+        encoded_jwt = jwt.encode(
+            {
+                "sub": username, 
+                "exp": datetime.now(tz=timezone.utc) + timedelta(days=int(os.getenv("ACCESS_TOKEN_EXPIRE")))
+            }, 
+            os.getenv("JWT_SECRET"), 
+            algorithm=os.getenv("JWT_ALGO"))
+  
         return encoded_jwt
 
     @classmethod    
     def get_token_user(cls, access_token: str):
-        key = os.getenv("JWT_SECRET")
-
-        payload = jwt.decode(access_token, key, algorithms=os.getenv("JWT_ALGO"))
-
+        payload = jwt.decode(access_token, os.getenv("JWT_SECRET"), algorithms=[os.getenv("JWT_ALGO")])
+        
         username = payload.get("sub")
         return username
     

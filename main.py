@@ -16,7 +16,7 @@ app = FastAPI(lifespan=lifespan)
 exceptionHandler = new_exception_handler()
 add_exception_handler(app, exceptionHandler)
 
-origins = ["*"]
+origins = [os.getenv("FRONTEND_URL")]
 
 app.add_middleware(
     CORSMiddleware,
