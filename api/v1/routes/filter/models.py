@@ -4,7 +4,7 @@ class Character(Document):
     short: str
     name: str
     eng: str | None
-    alt: Link["Character"] | None
+    alt: str | None
 
     class Settings:
         name = "characters"

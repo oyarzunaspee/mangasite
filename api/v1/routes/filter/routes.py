@@ -4,6 +4,7 @@ from api.v1.routes.manga.models import Page, Volume, Chapter
 from .models import Character
 from fastapi_problem.error import ServerProblem, BadRequestProblem
 from beanie.operators import Or, In
+from operator import itemgetter
 
 router = APIRouter(prefix="/filter", tags=["filter"])
 
@@ -23,7 +24,7 @@ async def filter_populate(
             "status": status.HTTP_200_OK,
             "filters": {
                 "saga": sagas,
-                "arc": arcs,
+                "arc": sorted(arcs, key=itemgetter('number')),
                 "duel": duels,
                 "characters": chars
             }
