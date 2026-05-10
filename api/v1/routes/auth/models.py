@@ -1,7 +1,8 @@
 from beanie import Document
 from pydantic import BaseModel
 from typing import List
-from jose import jwt
+from joserfc import jwt
+from joserfc.jwk import OctKey
 from datetime import timedelta, UTC, datetime
 import os
 from dotenv import load_dotenv
@@ -39,22 +40,25 @@ class AllowedUser(Document):
         return token
 
     @classmethod
-    def create_access_token(cls, username: str):
-        expire = datetime.now(UTC) + timedelta(int(os.getenv("ACCESS_TOKEN_EXPIRE")))
-        encoded_jwt = jwt.encode(
-            dict(sub=str(username), exp=expire),
-            os.getenv("JWT_SECRET"),
-            algorithm=os.getenv("JWT_ALGO")
-        )
+    def create_access_token(cls, username: str):       
+        now = datetime.datetime.now(datetime.UTC)
+        claims = {
+            "sub": username,
+            "iat": now,
+            "exp": now + timedelta(int(os.getenv("ACCESS_TOKEN_EXPIRE"))),
+        }
+        header = {"alg": os.getenv("JWT_SECRET")}
+        key = os.getenv("JWT_SECRET")
+        encoded_jwt = jwt.encode(header, claims, key)
+
         return encoded_jwt
 
     @classmethod    
     def get_token_user(cls, access_token: str):
-        payload = jwt.decode(
-            access_token, 
-            os.getenv("JWT_SECRET"), 
-            algorithms=[os.getenv("JWT_ALGO")]
-        )
+        key = os.getenv("JWT_SECRET")
+
+        payload = jwt.decode(access_token, key, algorithms=os.getenv("JWT_ALGO"))
+
         username = payload.get("sub")
         return username
     
