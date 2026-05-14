@@ -70,6 +70,32 @@ class Page(Document):
 
     class Settings:
         name = "pages"
+        page_filters = [
+            {
+                "query": "volume_cover",
+                "name": "Volume covers"
+            },
+            {
+                "query": "chapter_cover",
+                "name": "Chapter covers"
+            },
+            {
+                "query": "author_notes",
+                "name": "Takahashi's author notes"
+            },
+            {
+                "query": "tarot",
+                "name": "Tarot covers and notes"
+            },
+            {
+                "query": "extra_illust",
+                "name": "Extra illustrations"
+            },
+            {
+                "query": "game",
+                "name": "Game pages"
+            }
+        ]
 
     @classmethod
     async def query_volumes(cls, bunkoban: bool = False, saga: str = None) -> List["Chapter"]:
