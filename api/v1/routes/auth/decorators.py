@@ -8,7 +8,6 @@ def auth_user(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         token = kwargs["token"]
-        print(kwargs)
 
         if not token:
             raise UnauthorisedProblem(detail="No token")
