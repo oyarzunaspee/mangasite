@@ -1,13 +1,31 @@
-from fastapi import APIRouter, status, Cookie
+from fastapi import APIRouter, status, Cookie, Query
 from api.v1.routes.auth.decorators import auth_user
 from api.v1.routes.manga.models import Page, Volume, Chapter
-from .models import Character
+from api.v1.routes.manga.pipeline import PipelineDoc
+from .models import Character, FilterQueries
 from fastapi_problem.error import ServerProblem, BadRequestProblem
 from beanie.operators import Or, In
 from operator import itemgetter
+from typing import Annotated
+import pprint
 
 router = APIRouter(prefix="/filter", tags=["filter"])
 
+@router.get("/{tab}")
+async def filter_by_tab(
+    tab: str,
+    queries: Annotated[FilterQueries, Query()],
+    token: str | None = Cookie(default=None)
+    ):
+    try:
+        pipeline = PipelineDoc(tab, **queries.model_dump()).build_pipeline()
+        pprint.pp(pipeline)
+        result = await Page.aggregate(pipeline).to_list()
+        pprint.pp(result)
+        
+        return {"status": status.HTTP_200_OK, "result": result}
+    except Exception as e:
+        raise ServerProblem(detail=e)
 
 @router.get("")
 @auth_user
@@ -18,7 +36,7 @@ async def filter_populate(
         sagas = await Volume.distinct( "saga" , { "saga" : { "$ne" : None } } )
         arcs = await Chapter.distinct("arc", { "arc" : { "$ne" : None } })
         duels = await Chapter.distinct("duel", { "duel" : { "$ne" : None } })
-        chars = await Character.find().to_list()
+        grouped_chars = await Character.get_groups()
 
         return {
             "status": status.HTTP_200_OK,
@@ -26,7 +44,8 @@ async def filter_populate(
                 "saga": sagas,
                 "arc": sorted(arcs, key=itemgetter('number')),
                 "duel": duels,
-                "characters": chars
+                "groups": grouped_chars,
+                "page": Page.Settings.page_filters
             }
         }
     except Exception as e:

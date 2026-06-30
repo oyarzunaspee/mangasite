@@ -3,6 +3,8 @@ from .models import Page, IndividualPages, Chapter
 from beanie.operators import Or
 from api.v1.routes.auth.decorators import auth_user
 from fastapi_problem.error import ServerProblem
+from .pipeline import PipelineDoc
+import pprint
 
 
 router = APIRouter(prefix="/manga", tags=["manga"])
@@ -16,7 +18,8 @@ async def get_volumes(
     token: str | None = Cookie(default=None)
 ):
     try:
-        volumes = await Page.query_volumes(bunkoban)
+        pipeline = PipelineDoc(bunkoban=bunkoban).build_pipeline()
+        volumes = await Page.query_volumes(pipeline)
 
         return {"status": status.HTTP_200_OK, "volumes": volumes}
     except Exception as e:
