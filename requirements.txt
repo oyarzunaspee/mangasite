@@ -7,3 +7,5 @@ pymongo==4.16.0
 PyMuPDF==1.27.2
 uvicorn==0.41.0
 python-dotenv==1.2.2
+Authlib==1.7.0
+fastapi-problem==0.12.1
