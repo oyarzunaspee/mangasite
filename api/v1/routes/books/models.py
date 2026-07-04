@@ -30,7 +30,7 @@ class Book(Document):
     short: str
     jpn: str
     publisher: str
-    author: Optioal[str] = None
+    author: Optional[str] = None
     year: int
     pages: List[BookPage]
 
