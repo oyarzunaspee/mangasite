@@ -4,6 +4,7 @@ from beanie.operators import Or
 from api.v1.routes.auth.decorators import auth_user
 from fastapi_problem.error import ServerProblem
 from .pipeline import PipelineDoc
+from typing import Optional
 import pprint
 
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/manga", tags=["manga"])
 @auth_user
 async def get_volumes(
     bunkoban: bool = False,
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
         pipeline = PipelineDoc(bunkoban=bunkoban).build_pipeline()
@@ -31,7 +32,7 @@ async def get_volumes(
 async def get_pages(
     chap_num: int,
     bunkoban: bool = False,
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
         pages = await Page.find(
@@ -53,7 +54,7 @@ async def get_pages(
 async def compare_bunkoban(
     chap_num: int, 
     bunkoban: bool = False,
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
         pages = await Page.find(

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, computed_field
 from beanie import Document
-from typing import List
+from typing import List, Optional
 from enum import Enum
 from dotenv import load_dotenv
 import os
@@ -30,7 +30,7 @@ class Book(Document):
     short: str
     jpn: str
     publisher: str
-    author: str | None
+    author: Optioal[str] = None
     year: int
     pages: List[BookPage]
 

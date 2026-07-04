@@ -1,6 +1,6 @@
 from pydantic import computed_field, BaseModel
 from beanie import Document, Link
-from typing import List
+from typing import List, Optional
 from dotenv import load_dotenv
 import os
 
@@ -12,7 +12,7 @@ class Volume(Document):
     number: int
     title: str
     bunkoban: bool = False
-    saga: str | None
+    saga: Optional[str] = None
     counter: int
 
     class Settings:
@@ -25,9 +25,9 @@ class Arc(BaseModel):
 class Chapter(Document):
     number: int
     title: str
-    arc: Arc | None
+    arc: Optional[Arc] = None
     characters: List[str]
-    duel: str | None
+    duel: Optional[str] = None
     jpn: str
 
     class Settings:

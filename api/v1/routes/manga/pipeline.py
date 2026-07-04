@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import os
 from dotenv import load_dotenv
 from fastapi_problem.error import UnprocessableProblem
@@ -187,11 +187,11 @@ class PipelineDoc(VolumePipeline, ChapterPipeline, PagePipeline):
             self, 
             tab: str = None,
             bunkoban: bool = False, 
-            saga: str | None = None, 
-            arc: List[str] | None = None,
-            duel: List[str] | None = None,
-            characters: List[str] | None = None,
-            page_filters: List[str] | None = None
+            saga: Optional[List[str]] = None, 
+            arc: Optional[List[str]] = None,
+            duel: Optional[List[str]] = None,
+            characters: Optional[List[str]] = None,
+            page_filters: Optional[List[str]] = None
         ):
         self.bunkoban = bunkoban
         self.saga = saga
@@ -217,14 +217,13 @@ class PipelineDoc(VolumePipeline, ChapterPipeline, PagePipeline):
 
     def build_pipeline(self):
 
-        match self.tab:
-            case "volumes":
-                self.build_volumes()
+        if self.tab == "volumes":
+            self.build_volumes()
 
-            case "chapters":
-                self.build_chapters()
+        elif self.tab == "chapters":
+            self.build_chapters()
 
-            case "pages":
+        elif self.tab == "pages":
                 self.build_pages()
 
         return self.pipeline

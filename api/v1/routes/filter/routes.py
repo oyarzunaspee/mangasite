@@ -6,7 +6,7 @@ from .models import Character, FilterQueries
 from fastapi_problem.error import ServerProblem, BadRequestProblem
 from beanie.operators import Or, In
 from operator import itemgetter
-from typing import Annotated
+from typing import Annotated, Optional
 import pprint
 
 router = APIRouter(prefix="/filter", tags=["filter"])
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/filter", tags=["filter"])
 async def filter_by_tab(
     tab: str,
     queries: Annotated[FilterQueries, Query()],
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
     ):
     try:
         pipeline = PipelineDoc(tab, **queries.model_dump()).build_pipeline()
@@ -30,7 +30,7 @@ async def filter_by_tab(
 @router.get("")
 @auth_user
 async def filter_populate(
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
     ):
     try:
         sagas = await Volume.distinct( "saga" , { "saga" : { "$ne" : None } } )
@@ -55,7 +55,7 @@ async def filter_populate(
 @auth_user
 async def filter_chapters(
     saga: str = None,
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
     ):
     try:
         volumes = await Page.query_volumes(saga=saga)
@@ -69,7 +69,7 @@ async def filter_chapters(
     arc: str = None,
     characters: str = None,
     duel: str = None,
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
     ):
     try:
         if characters:
@@ -90,7 +90,7 @@ async def filter_chapters(
 @auth_user
 async def filter_pages(
     field: str,
-    token: str | None = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
     ):
     try:
         if field not in list(Page.model_dump().keys()):

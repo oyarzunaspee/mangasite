@@ -24,8 +24,8 @@ class Group(Enum):
 class Character(Document):
     short: str
     name: str
-    eng: str | None
-    alt: str | None
+    eng: Optional[str] = None
+    alt: Optional[str] = None
     _group: str
 
     class Settings:
