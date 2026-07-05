@@ -60,7 +60,7 @@ async def callback(request: Request):
             )
             return response
     except Exception as e:
-        raise ServerProblem(detail=e)
+        raise ServerProblem(detail=str(e))
 
 @router.post("/authorize")
 async def authorize(request: Request):
