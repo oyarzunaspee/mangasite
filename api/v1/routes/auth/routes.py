@@ -56,7 +56,8 @@ async def callback(request: Request):
             value = new_token,
             httponly=True,
             secure=True,
-            samesite="none"
+            samesite="none",
+            domain=".ygos.online"
             )
             return response
     except Exception as e:
