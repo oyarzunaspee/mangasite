@@ -7,10 +7,11 @@ from jwt.exceptions import ExpiredSignatureError
 def auth_user(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        token = kwargs["token"]
+        token = kwargs["token"] or None
 
         if not token:
-            raise UnauthorisedProblem(detail="No token")
+            return await func(*args, **kwargs)
+            # raise UnauthorisedProblem(detail="No token")
 
         try:
             user_allowed = await AllowedUser.authorize_user(token)

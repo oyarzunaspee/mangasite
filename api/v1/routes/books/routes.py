@@ -11,7 +11,7 @@ router = APIRouter(prefix="/books", tags=["books"])
 @router.get("")
 @auth_user
 async def get_books(
-    # token: Optional[str] = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
 
@@ -26,7 +26,7 @@ async def get_books(
 @auth_user
 async def get_book(
     book_id: str,
-    # token: Optional[str] = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
 

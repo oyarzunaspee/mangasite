@@ -16,7 +16,7 @@ router = APIRouter(prefix="/manga", tags=["manga"])
 @auth_user
 async def get_volumes(
     bunkoban: bool = False,
-    # token: Optional[str] = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
         pipeline = PipelineDoc(bunkoban=bunkoban).build_pipeline()
@@ -32,7 +32,7 @@ async def get_volumes(
 async def get_pages(
     chap_num: int,
     bunkoban: bool = False,
-    # token: Optional[str] = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
         pages = await Page.find(
@@ -54,7 +54,7 @@ async def get_pages(
 async def compare_bunkoban(
     chap_num: int, 
     bunkoban: bool = False,
-    # token: Optional[str] = Cookie(default=None)
+    token: Optional[str] = Cookie(default=None)
 ):
     try:
         pages = await Page.find(
