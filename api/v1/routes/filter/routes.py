@@ -7,9 +7,29 @@ from fastapi_problem.error import ServerProblem, BadRequestProblem
 from beanie.operators import Or, In
 from operator import itemgetter
 from typing import Annotated, Optional
+from enum import Enum
 import pprint
 
+class TabEnum(str, Enum):
+    volumes = "volumes"
+    chapters = "chapters"
+    pages = "pages"
+
 router = APIRouter(prefix="/filter", tags=["filter"])
+
+@router.get("/{tab}")
+async def perform_filter(
+    tab: TabEnum,
+    queries: Annotated[FilterQueries, Query()]
+    ):
+    try:
+        # check conditional fields for each tab
+        queries.validate_tab(tab.value)
+
+        results = await queries.build_query(tab.value)
+        return {"status": status.HTTP_200_OK, "results": results}
+    except Exception as e:
+        raise ServerProblem(detail=e)
 
 @router.get("/{tab}")
 async def filter_by_tab(
@@ -53,7 +73,7 @@ async def filter_populate(
 
 @router.get("/volumes")
 @auth_user
-async def filter_chapters(
+async def filter_volumes(
     saga: str = None,
     token: Optional[str] = Cookie(default=None)
     ):

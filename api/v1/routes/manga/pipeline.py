@@ -7,6 +7,8 @@ load_dotenv()
 
 URL = os.getenv("STORE_URL")
 
+# made before Beanie's 2.2 update
+
 class VolumePipeline:
     def match_volumes(self):
         match = {
