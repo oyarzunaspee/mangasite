@@ -5,6 +5,7 @@ from api.v1.routes.auth.decorators import auth_user
 from fastapi_problem.error import ServerProblem
 from .pipeline import PipelineDoc
 from typing import Optional
+from api.v1.utils.logs import logger
 import pprint
 
 
@@ -42,6 +43,8 @@ async def get_pages(
         ).sort(+Page.number).project(IndividualPages).to_list()
 
         next_limit = await Chapter.find().sort(-Chapter.number).first_or_none()
+
+        logger.info("Chapter pages requested")
 
         return {"status": status.HTTP_200_OK, "pages": pages, "next_limit": next_limit.number}
     except Exception as e:
