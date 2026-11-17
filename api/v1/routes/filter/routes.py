@@ -7,6 +7,7 @@ from fastapi_problem.error import ServerProblem, BadRequestProblem
 from beanie.operators import Or, In
 from operator import itemgetter
 from typing import Annotated, Optional
+from api.v1.utils.logs import logger
 import pprint
 
 router = APIRouter(prefix="/filter", tags=["filter"])
@@ -99,6 +100,8 @@ async def filter_pages(
             f"{field}": True
         }
         pages = await Page.find(match).to_list()
+
+        logger.info("Chapter pages requested")
 
         return {"status": status.HTTP_200_OK, "pages": pages}
     except Exception as e:
