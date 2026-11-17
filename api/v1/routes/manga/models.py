@@ -1,5 +1,6 @@
-from pydantic import computed_field, BaseModel
+from pydantic import BaseModel
 from beanie import Document, Link
+from api.v1.utils.custom_beanie import CustomDocument
 from typing import List, Optional
 from dotenv import load_dotenv
 import os
@@ -32,6 +33,7 @@ class Chapter(Document):
 
     class Settings:
         name = "chapters"
+        projection = {"_id": 0}
 
     @classmethod
     async def get_arc_values(cls):
@@ -54,7 +56,7 @@ class Chapter(Document):
         arcs = await cls.aggregate(pipeline).to_list()
         return arcs
 
-class Page(Document):
+class Page(CustomDocument):
     volume: Link[Volume]
     chapter: Link[Chapter]
     number: int

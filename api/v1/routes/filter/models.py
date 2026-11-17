@@ -4,41 +4,50 @@ from pydantic import BaseModel, model_validator
 from typing import List, Optional
 from enum import Enum
 from api.v1.routes.manga.models import Page, Volume
+from api.v1.utils.custom_beanie import CustomDocument
+
 
 class TabCond(Enum):
-    volumes = ["bunkoban", "saga"]
-    chapters = ["arc", "duel", "characters"]
-    pages = ["page_filters"]
+    volumes     = ["bunkoban", "saga"]
+    chapters    = ["arc", "duel", "characters"]
+    pages =     ["page_filter"]
+
+class PageFilters(Enum):
+    vol_cover   = "volume_cover"
+    chap_cover  = "chapter_cover"
+    author      = "author_notes"
+    tarot       = "tarot"
+    illust      = "extra_illust"
+    game        = "game"
 
 class FilterQueries(BaseModel):
-    bunkoban:       bool                = False
-    saga:           Optional[str]       = None
-    arc:            Optional[List[str]] = None
-    duel:           Optional[List[str]] = None
-    characters:     Optional[List[str]] = None
-    page_filters:   Optional[List[str]] = None
+    bunkoban:       bool                    = False
+    saga:           Optional[str]           = None
+    arc:            Optional[List[int]]     = None
+    duel:           Optional[List[str]]     = None
+    characters:     Optional[List[str]]     = None
+    page_filter:    Optional[PageFilters]   = None
 
-    class Settings:
-        page_filters = [
-            "volume_cover",
-            "chapter_cover",
-            "author_notes",
-            "tarot",
-            "extra_illust",
-            "game"
-        ]
+    class QueryConfig:
+        # not just Document.[field] but Document.[field].[nested_field]
+        nested_fields = [{
+            "name": "arc",
+            "nested_field": "number"
+        }]
+        all_operator = {"characters"} # as opposed to $in
 
-    def filled_fields(self):
-        return [field for field in self.model_dump().keys() if getattr(self, field) is not None]
+    def provided_filters(self):
+        return [field for field in type(self).model_fields if getattr(self, field) is not None]
 
     @model_validator(mode="after")
     def validate_tab(self, tab: str):
+        provided_filters = self.provided_filters()
 
         # required fields for each tab
         tab_cond = dict(
-            volumes = all(item in set(self.filled_fields()) for item in TabCond.volumes.value),
-            chapters = any(item in TabCond.chapters.value for item in self.filled_fields()),
-            pages = TabCond.pages.value in self.filled_fields()
+            volumes = all(item in set(provided_filters) for item in TabCond.volumes.value),
+            chapters = any(item in TabCond.chapters.value for item in provided_filters),
+            pages = self.page_filter in [x.value for x in PageFilters]
         )
 
         for cond in tab_cond.keys():
@@ -47,50 +56,60 @@ class FilterQueries(BaseModel):
 
         return self
 
-    async def build_query(self, tab: str):
-        filled_fields = self.filled_fields()
+    def fetch_links_query(self, query_dict: dict, pages_tab: bool, provided_filters: list):
         
+        # QueryConfigct filled chapter filters
+        chapter_fields = [x for x in TabCond.chapters.value if x in provided_filters]
+    
+        for chapter_f in chapter_fields:
+            nested_fields = self.QueryConfig.nested_fields
+
+            nested_query = next((f".{item["nested_field"]}" for item in nested_fields if item["name"] == chapter_f), "")
+            operator = "all" if chapter_f in self.QueryConfig.all_operator else "in"
+
+            chapter_query = f"chapter.{chapter_f}{nested_query}"
+    
+            query_dict[chapter_query] = {
+                f"${operator}": getattr(self, chapter_f)
+            }
+                
+        if pages_tab:
+            query_dict[f"{self.page_filter}"] = True
+    
+        return query_dict
+
+    async def execute_query(self, tab: str):     
+        provided_filters = self.provided_filters() 
 
         query_dict = dict()
         # Volume.[field] or Page.volume.[field]
-        vol_prefix = "" if tab is "volumes" else "volume."
+        volume_prefix = "" if tab == "volumes" else "volume."
 
-        # filter the volume filters requested
-        vol_fields = [x for x in TabCond.volumes.value if x in filled_fields]
-        for vol_f in vol_fields:
-            query_dict[f"{vol_prefix}{vol_f}"] = getattr(self, vol_f)
+        # extract filled volume filters
+        volume_fields = [x for x in TabCond.volumes.value if x in provided_filters]
+        for volume_f in volume_fields:
+            query_dict[f"{volume_prefix}{volume_f}"] = getattr(self, volume_f)
 
-        if tab is "volumes":
-            query = await Volume.find(query_dict)
+        if tab == "volumes":
+            query = Volume.find(query_dict).sort("number")
 
-        # Page is linked to Volume and Chapter, Chapter and Volume are not linked to each other
-        # full fetched queries must be filtered through Page
-        # all queries must include Volume.bunkoban
         else:
-            query_dict = self.fetch_links_query(query_dict, tab is "pages")
-            query = await Page.find(query_dict, fetch_links=True)
+            # Page is linked to Volume and Chapter, Chapter and Volume are not linked to each other
+            # full fetched queries must be filtered through Page
+            # all queries must include Volume.bunkoban
+            query_dict = self.fetch_links_query(
+                query_dict, 
+                tab == "pages",
+                provided_filters
+            )
+            query = Page.find(query_dict, fetch_links=True)
 
-        if tab is "chapters":
-            results = query.distinct("chapter")
+        if tab == "chapters":
+            results = await query.distinct("chapter")
         else:
-            results = query.to_list()
+            results = await query.to_list()
 
         return results
-
-    def fetch_links_query(self, query_dict: dict, pages: bool):
-        filled_fields = self.filled_fields()
-        # filter the chapter filters requested
-        chap_fields = [x for x in TabCond.chapters.value if x in filled_fields]
-        for chap_f in chap_fields:
-            query_dict[f"chapter.{chap_f}"] = getattr(self, chap_f)
-
-        if pages:
-            # filter the page filters requested
-            page_fields = [x for x in self.Settings.page_filters if x in self.page_filters]
-            for page_f in page_fields:
-                query_dict[f"{page_f}"] = True
-
-        return query_dict
 
 
 class Group(Enum):
@@ -101,7 +120,7 @@ class Group(Enum):
     duelist =       (5, "Duelists")
     memory =        (6, "Memory World")
 
-class Character(Document):
+class Character(CustomDocument):
     short: str
     name: str
     eng: Optional[str] = None

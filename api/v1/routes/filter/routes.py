@@ -26,26 +26,11 @@ async def perform_filter(
         # check conditional fields for each tab
         queries.validate_tab(tab.value)
 
-        results = await queries.build_query(tab.value)
+        results = await queries.execute_query(tab.value)
         return {"status": status.HTTP_200_OK, "results": results}
     except Exception as e:
         raise ServerProblem(detail=e)
 
-@router.get("/{tab}")
-async def filter_by_tab(
-    tab: str,
-    queries: Annotated[FilterQueries, Query()],
-    token: Optional[str] = Cookie(default=None)
-    ):
-    try:
-        pipeline = PipelineDoc(tab, **queries.model_dump()).build_pipeline()
-        pprint.pp(pipeline)
-        result = await Page.aggregate(pipeline).to_list()
-        pprint.pp(result)
-        
-        return {"status": status.HTTP_200_OK, "result": result}
-    except Exception as e:
-        raise ServerProblem(detail=e)
 
 @router.get("")
 @auth_user
@@ -53,73 +38,21 @@ async def filter_populate(
     token: Optional[str] = Cookie(default=None)
     ):
     try:
-        sagas = await Volume.distinct( "saga" , { "saga" : { "$ne" : None } } )
-        arcs = await Chapter.distinct("arc", { "arc" : { "$ne" : None } })
-        duels = await Chapter.distinct("duel", { "duel" : { "$ne" : None } })
+        exclude_none = { "$ne" : None }
+        sagas = await Volume.distinct( "saga" , { "saga" : exclude_none } )
+        arcs = await Chapter.distinct("arc", { "arc" : exclude_none })
+        duels = await Chapter.distinct("duel", { "duel" : exclude_none })
         grouped_chars = await Character.get_groups()
 
         return {
             "status": status.HTTP_200_OK,
             "filters": {
                 "saga": sagas,
-                "arc": sorted(arcs, key=itemgetter('number')),
+                "arc": sorted(arcs, key=itemgetter("number")),
                 "duel": duels,
                 "groups": grouped_chars,
                 "page": Page.Settings.page_filters
             }
         }
-    except Exception as e:
-        raise ServerProblem(detail=e)
-
-@router.get("/volumes")
-@auth_user
-async def filter_volumes(
-    saga: str = None,
-    token: Optional[str] = Cookie(default=None)
-    ):
-    try:
-        volumes = await Page.query_volumes(saga=saga)
-        return {"status": status.HTTP_200_OK, "volumes": volumes}
-    except Exception as e:
-        raise ServerProblem(detail=e)
-
-@router.get("/chapters")
-@auth_user
-async def filter_chapters(
-    arc: str = None,
-    characters: str = None,
-    duel: str = None,
-    token: Optional[str] = Cookie(default=None)
-    ):
-    try:
-        if characters:
-            characters = characters.split(",")
-        chapters = await Chapter.find(
-            Or(
-            Chapter.arc == arc,
-            In(Chapter.characters, characters),
-            Chapter.duel == duel
-            )
-        ).sort(+Chapter.number).to_list()
-
-        return {"status": status.HTTP_200_OK, "chapters": chapters}
-    except Exception as e:
-        raise ServerProblem(detail=e)
-
-@router.get("/pages")
-@auth_user
-async def filter_pages(
-    field: str,
-    token: Optional[str] = Cookie(default=None)
-    ):
-    try:
-        if field not in list(Page.model_dump().keys()):
-            raise BadRequestProblem(detail="Wrong field")
-        match = {
-            f"{field}": True
-        }
-        pages = await Page.find(match).to_list()
-
-        return {"status": status.HTTP_200_OK, "pages": pages}
     except Exception as e:
         raise ServerProblem(detail=e)
