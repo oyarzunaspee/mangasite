@@ -12,3 +12,4 @@ fastapi-problem
 httpx
 PyJWT
 itsdangerous
+slowapi

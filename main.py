@@ -6,6 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi_problem.handler import add_exception_handler, new_exception_handler
 from api.v1.utils.exception_handlers import custom_404_handler
+from api.v1.utils.limiter import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+
 
 import os
 from dotenv import load_dotenv
@@ -25,6 +29,9 @@ add_exception_handler(app, exceptionHandler)
 
 app.add_exception_handler(404, custom_404_handler)
 app.add_exception_handler(403, custom_404_handler)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 origins = [os.getenv("FRONTEND_URL")]
