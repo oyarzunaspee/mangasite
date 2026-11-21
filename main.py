@@ -24,8 +24,8 @@ add_exception_handler(app, exceptionHandler)
 customExceptionHandler = new_exception_handler()
 add_exception_handler(app, exceptionHandler)
 
-app.add_exception_handler(404, custom_404_handler)
-app.add_exception_handler(403, custom_404_handler)
+# app.add_exception_handler(404, custom_404_handler)
+# app.add_exception_handler(403, custom_404_handler)
 
 
 origins = [os.getenv("FRONTEND_URL")]
