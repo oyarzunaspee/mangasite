@@ -34,8 +34,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[origins],
     allow_credentials=True,
-    allow_methods=["GET"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET"]
 )
 
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"), same_site="none", https_only=True )
